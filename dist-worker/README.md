@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "pokemon-showdown-worker" generated at 2025-12-05T12:22:05.344Z.
