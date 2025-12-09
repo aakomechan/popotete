@@ -51,37 +51,36 @@ class LoginServerInstance {
 		this.disabled = false;
 	}
 
-	async instantRequest(action: string, data: AnyObject | null = null): Promise<LoginServerResponse> {
-		if (this.openRequests > 5) {
-			return Promise.resolve(
-				[null, new RangeError("Request overflow")]
-			);
-		}
-		this.openRequests++;
+        async instantRequest(action: string, data: AnyObject | null = null): Promise<LoginServerResponse> {
+                if (this.openRequests > 5) {
+                        return Promise.resolve(
+                                [null, new RangeError("Request overflow")]
+                        );
+                }
+                this.openRequests++;
 
-		try {
-			const request = Net(this.uri);
-			const buffer = await request.get({
+                try {
+                        const request = Net(this.uri);
+                        const buffer = await request.get({
 				query: {
 					...data,
 					act: action,
 					serverid: Config.serverid,
-					servertoken: Config.servertoken,
-					nocache: new Date().getTime(),
-				},
-			});
-			const json = parseJSON(buffer);
-			this.openRequests--;
-			if (json.error) {
-				return [null, new Error(json.error)];
-			}
-			this.openRequests--;
-			return [json.json!, null];
-		} catch (error: any) {
-			this.openRequests--;
-			return [null, error];
-		}
-	}
+                                        servertoken: Config.servertoken,
+                                        nocache: new Date().getTime(),
+                                },
+                        });
+                        const json = parseJSON(buffer);
+                        if (json.error) {
+                                return [null, new Error(json.error)];
+                        }
+                        return [json.json!, null];
+                } catch (error: any) {
+                        return [null, error];
+                } finally {
+                        this.openRequests--;
+                }
+        }
 
 	request(action: string, data: AnyObject | null = null): Promise<LoginServerResponse> {
 		if (this.disabled) {
