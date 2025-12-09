@@ -156,32 +156,33 @@ class PlayerLadder extends Ladder {
 		return this; // allow chaining
 	}
 
-	// add the different keys to the history - async for larger leaderboards
-	// FIXME: this is not what "async" means
-	softReset() {
-		return new Promise<void>((resolve, reject) => {
-			for (const u in this.data) {
-				const userData = this.data[u];
-				for (const a in userData) {
-					if (/^(?:cumulative|history)-/i.test(a) || a === 'name') continue; // cumulative does not need to be soft reset
-					const historyKey = 'history-' + a;
+        // add the different keys to the history - async for larger leaderboards
+        async softReset() {
+                let processedUsers = 0;
+                for (const u in this.data) {
+                        const userData = this.data[u];
+                        for (const a in userData) {
+                                if (/^(?:cumulative|history)-/i.test(a) || a === 'name') continue; // cumulative does not need to be soft reset
+                                const historyKey = 'history-' + a;
 
-					if (!userData[historyKey]) userData[historyKey] = [];
+                                if (!userData[historyKey]) userData[historyKey] = [];
 
-					userData[historyKey].unshift(userData[a]);
-					userData[historyKey] = userData[historyKey].slice(0, HISTORY_PERIOD);
+                                userData[historyKey].unshift(userData[a]);
+                                userData[historyKey] = userData[historyKey].slice(0, HISTORY_PERIOD);
 
-					userData[a] = 0; // set it back to 0
-					// clean up if history is all 0's
-					if (!userData[historyKey].some((p: any) => !!p)) {
-						delete userData[a];
-						delete userData[historyKey];
-					}
-				}
-			}
-			resolve();
-		});
-	}
+                                userData[a] = 0; // set it back to 0
+                                // clean up if history is all 0's
+                                if (!userData[historyKey].some((p: any) => !!p)) {
+                                        delete userData[a];
+                                        delete userData[historyKey];
+                                }
+                        }
+                        processedUsers++;
+                        if (processedUsers % 100 === 0) {
+                                await new Promise<void>(resolve => setImmediate(resolve));
+                        }
+                }
+        }
 
 	hardReset() {
 		this.data = {};
